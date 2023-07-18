@@ -7,7 +7,7 @@ def BFS(matrix, start, end):
     BFS algorithm:
     Parameters:
     ---------------------------
-    matrix: np array 
+    matrix: np array
         The graph's adjacency matrix
     start: integer
         starting node
@@ -23,31 +23,31 @@ def BFS(matrix, start, end):
         Founded path
     """
     # TODO: 
-    queue = deque()
-    visited = {}
-    path = []
+    queue = deque()  # Create a queue using deque (double-ended queue)
+    visited = {}  # Create an empty dictionary to store visited nodes
+    path = []  # Create an empty list to store the path
 
-    queue.append(start)
-    visited[start] = None
+    queue.append(start)  # Enqueue the starting node
+    visited[start] = None  # Mark the starting node as visited
 
     while queue:
-        node = queue.popleft()
+        node = queue.popleft()  # Dequeue a node from the front of the queue
 
         if node == end:
             # Reconstruct the path from end to start
             current = end
             while current is not None:
-                path.insert(0, current)
-                current = visited[current]
-            break
+                path.insert(0, current)  # Insert the current node at the beginning of the path list
+                current = visited[current]  # Move to the previous node in the path
+            break  # Exit the loop if the end node is reached
 
-        neighbors = np.nonzero(matrix[node])[0]
+        neighbors = np.nonzero(matrix[node])[0]  # Find the neighbors of the current node
         for neighbor in neighbors:
             if neighbor not in visited:
-                queue.append(neighbor)
-                visited[neighbor] = node
+                queue.append(neighbor)  # Enqueue the unvisited neighbor
+                visited[neighbor] = node  # Mark the neighbor as visited and store the current node as its previous node
 
-    return visited, path
+    return visited, path  # Return the visited dictionary and the path list
 
 
 def DFS(matrix, start, end):
@@ -72,32 +72,32 @@ def DFS(matrix, start, end):
     """
 
     # TODO: 
-    visited = {}
-    path = []
+    visited = {}  # Dictionary to keep track of visited nodes
+    path = []  # List to store the path from start to end
 
-    def explore(node):
-        if node == end:
-            # Reconstruct the path from end to start
-            current = end
-            while current is not None:
-                path.insert(0, current)
-                current = visited[current]
-            return True
+    # Recursive DFS function
+    def dfs(node, matrix, end, visited):
+        if node == end: 
+            return  # Exit the function if the end node is reached
 
-        visited[node] = None
+        for adjacent_node in range(len(matrix[node])):
+            if matrix[node][adjacent_node] != 0 and adjacent_node not in visited:
+                visited[adjacent_node] = node  # Mark the adjacent node as visited and store the current node as its previous node
+                dfs(adjacent_node, matrix, end, visited)  # Recursively call the DFS function on the adjacent node
 
-        neighbors = np.nonzero(matrix[node])[0]
-        for neighbor in neighbors:
-            if neighbor not in visited:
-                visited[neighbor] = node
-                if explore(neighbor):
-                    return True
+    # Call the DFS function to start the search
+    visited[start] = None  # Mark the starting node as visited
+    dfs(start, matrix, end, visited)  # Start the DFS search
 
-        return False
+    # Build the path from start to end using the visited dictionary
+    if end in visited:
+        current = end
+        while current != start:
+            path.insert(0, current)  # Insert the current node at the beginning of the path list
+            current = visited[current]  # Move to the previous node in the path
+        path.insert(0, start)  # Insert the start node at the beginning of the path list
 
-    explore(start)
-
-    return visited, path
+    return visited, path  # Return the visited dictionary and the path list
 
 
 def UCS(matrix, start, end):
@@ -121,33 +121,32 @@ def UCS(matrix, start, end):
         Founded path
     """
     # TODO:  
-    pq = PriorityQueue()
-    visited = {}
-    path = []
+    pq = PriorityQueue()  # Create a priority queue to prioritize nodes based on their costs
+    visited = {}  # Dictionary to keep track of visited nodes
+    path = []  # List to store the path from start to end
 
-    pq.put((0, start))
-    visited[start] = (0, None)
+    pq.put((0, start))  # Enqueue the starting node with a cost of 0
+    visited[start] = (0, None)  # Mark the starting node as visited with a cost of 0 and no previous node
 
     while not pq.empty():
-        cost, node = pq.get()
+        cost, node = pq.get()  # Dequeue the node with the lowest cost from the priority queue
 
         if node == end:
             # Reconstruct the path from end to start
             current = end
             while current is not None:
-                path.insert(0, current)
-                current = visited[current][1]
-            break
+                path.insert(0, current)  # Insert the current node at the beginning of the path list
+                current = visited[current][1]  # Move to the previous node in the path
+            break  # Exit the loop if the end node is reached
 
-        neighbors = np.nonzero(matrix[node])[0]
+        neighbors = np.nonzero(matrix[node])[0]  # Find the neighbors of the current node
         for neighbor in neighbors:
-            new_cost = cost + matrix[node, neighbor]
+            new_cost = cost + matrix[node, neighbor]  # Calculate the cost to reach the neighbor
             if neighbor not in visited or new_cost < visited[neighbor][0]:
-                visited[neighbor] = (new_cost, node)
-                pq.put((new_cost, neighbor))
+                visited[neighbor] = (new_cost, node)  # Update the cost and previous node for the neighbor
+                pq.put((new_cost, neighbor))  # Enqueue the neighbor with the updated cost
 
-    return visited, path
-
+    return visited, path  # Return the visited dictionary and the path list
 
 
 def GBFS(matrix, start, end):
@@ -172,33 +171,34 @@ def GBFS(matrix, start, end):
         Founded path
     """
     # TODO: 
-    pq = PriorityQueue()
-    visited = {}
-    path = []
+    visited = {}  # Dictionary to keep track of visited nodes
+    path = []  # List to store the path from start to end
 
-    def heuristic(node):
-        return matrix[node, end]
+    priority_queue = PriorityQueue()  # Priority queue for selecting nodes based on the heuristic value
+    priority_queue.put((0, start))  # Initialize the priority queue with the start node and heuristic value 0
+    visited[start] = None  # Mark the start node as visited
+    cost = {}  # Dictionary to store the smallest cost of the path of each node with its parent node
+    cost[start] = 0  # Cost of the start node is 0
 
-    pq.put((0, start))
-    visited[start] = None
+    while not priority_queue.empty():
+        _, current_node = priority_queue.get()  # Get the node with the lowest heuristic value
+        if current_node == end:
+            break  # End node found, exit the loop
 
-    while not pq.empty():
-        _, node = pq.get()
+        for adjacent_node in range(len(matrix[current_node])):
+            if matrix[current_node][adjacent_node] != 0 and adjacent_node not in visited and (
+                    adjacent_node not in cost or matrix[current_node][adjacent_node] < cost[adjacent_node]):
+                priority_queue.put((matrix[current_node][adjacent_node], adjacent_node))
+                cost[adjacent_node] = matrix[current_node][adjacent_node]
+                visited[adjacent_node] = current_node
 
-        if node == end:
-            # Reconstruct the path from end to start
-            current = end
-            while current is not None:
-                path.insert(0, current)
-                current = visited[current]
-            break
-
-        neighbors = np.nonzero(matrix[node])[0]
-        for neighbor in neighbors:
-            if neighbor not in visited:
-                visited[neighbor] = node
-                priority = heuristic(neighbor)
-                pq.put((priority, neighbor))
+    # Build the path from start to end using the visited dictionary
+    if end in visited:
+        current = end
+        while current != start:
+            path.insert(0, current)
+            current = visited[current]
+        path.insert(0, start)
 
     return visited, path
 
@@ -225,35 +225,34 @@ def Astar(matrix, start, end, pos):
         Founded path
     """
     # TODO: 
-
-    pq = PriorityQueue()
-    visited = {}
-    path = []
+    pq = PriorityQueue()  # Create a priority queue to prioritize nodes based on their costs
+    visited = {}  # Dictionary to keep track of visited nodes
+    path = []  # List to store the path from start to end
 
     def heuristic(node):
+        # Calculate the Euclidean distance between the given node and the end node
         return np.linalg.norm(np.array(pos[end]) - np.array(pos[node]))
 
-    pq.put((0, start))
-    visited[start] = (0, None)
+    pq.put((0, start))  # Enqueue the starting node with a cost of 0
+    visited[start] = (0, None)  # Mark the starting node as visited with a cost of 0 and no previous node
 
     while not pq.empty():
-        cost, node = pq.get()
+        cost, node = pq.get()  # Dequeue the node with the lowest cost from the priority queue
 
         if node == end:
             # Reconstruct the path from end to start
             current = end
             while current is not None:
-                path.insert(0, current)
-                current = visited[current][1]
-            break
+                path.insert(0, current)  # Insert the current node at the beginning of the path list
+                current = visited[current][1]  # Move to the previous node in the path
+            break  # Exit the loop if the end node is reached
 
-        neighbors = np.nonzero(matrix[node])[0]
+        neighbors = np.nonzero(matrix[node])[0]  # Find the neighbors of the current node
         for neighbor in neighbors:
-            new_cost = visited[node][0] + matrix[node, neighbor]
+            new_cost = visited[node][0] + matrix[node, neighbor]  # Calculate the cost to reach the neighbor
             if neighbor not in visited or new_cost < visited[neighbor][0]:
-                visited[neighbor] = (new_cost, node)
-                priority = new_cost + heuristic(neighbor)
-                pq.put((priority, neighbor))
+                visited[neighbor] = (new_cost, node)  # Update the cost and previous node for the neighbor
+                priority = new_cost + heuristic(neighbor)  # Calculate the priority using the cost and heuristic
+                pq.put((priority, neighbor))  # Enqueue the neighbor with the updated priority
 
-    return visited, path
-
+    return visited, path  # Return the visited dictionary and the path list
